@@ -37,6 +37,7 @@ def svm_loss_naive(W, X, y, reg):
             margin = scores[j] - correct_class_score + 1  # note delta = 1
             if margin > 0:
                 loss += margin
+                dW[:, j] += X[i]
                 count += 1
         dW[:, y[i]] += -X[i] * count
 
@@ -78,15 +79,24 @@ def svm_loss_vectorized(W, X, y, reg):
     # result in loss.                                                           #
     #############################################################################
     scores = np.dot(X, W)
-    scores = scores - scores[np.arange(num_train), y] + delta
-
-    loss = np.sum(np.where(scores > 0, 1, 0)) / num_train
+    correct_class_score = scores[np.arange(num_train), y]
+    margins = scores - correct_class_score[:, np.newaxis] + delta
+    margins = np.where(margins > 0, margins, 0)
+    margins[np.arange(num_train), y] = 0
+    loss = np.sum(margins) / num_train
     loss += 0.5 * reg * np.sum(W * W)
 
-    counts = np.zeros(W.shape)
-    counts[np.arange(num_train), y] = np.sum(np.where(scores > 0, scores, 0))
-    dW = - np.dot(X.T, counts)
+    dloss = np.where(margins > 0, 1, 0)
+    incorrect_count = np.sum(dloss, axis=1)
+    dloss[np.arange(num_train), y] = -incorrect_count
+    dW = np.dot(X.T, dloss)
     dW /= num_train
+
+
+
+    # counts = np.zeros((num_train, num_classes), dtype=np.int32)
+    # counts[np.arange(num_train), y] = np.sum(np.where(scores > 0, 1, 0))
+
     dW += reg * W
     #############################################################################
     #                             END OF YOUR CODE                              #

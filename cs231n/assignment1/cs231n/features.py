@@ -111,15 +111,13 @@ def hog_feature(im):
     for i in range(orientations):
         # create new integral image for this orientation
         # isolate orientations in this range
-        temp_ori = np.where(grad_ori < 180 / orientations * (i + 1),
-                            grad_ori, 0)
-        temp_ori = np.where(grad_ori >= 180 / orientations * i,
-                            temp_ori, 0)
+        temp_ori = np.where(grad_ori < 180 / orientations * (i + 1), grad_ori, 0)
+        temp_ori = np.where(grad_ori >= 180 / orientations * i, temp_ori, 0)
         # select magnitudes for those orientations
         cond2 = temp_ori > 0
         temp_mag = np.where(cond2, grad_mag, 0)
-        orientation_histogram[:, :, i] = uniform_filter(temp_mag, size=(cx, cy))[cx / 2::cx, cy / 2::cy].T
-
+        temp = uniform_filter(temp_mag, size=(cx, cy))
+        orientation_histogram[:, :, i] = temp[4::8, 4::8].T
     return orientation_histogram.ravel()
 
 
